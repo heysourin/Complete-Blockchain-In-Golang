@@ -1,13 +1,15 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"log" //print manipulation
+	"strings"
 	"time"
-  "strings"
 )
 
-//Block Struct: What a block contains
+// Block Struct: What a block contains
 type Block struct {
 	nonce        int
 	previousHash string
@@ -20,6 +22,7 @@ func NewBlock(nonce int, previousHash string) *Block {
 	b.timestamp = time.Now().UnixNano()
 	b.nonce = nonce
 	b.previousHash = previousHash
+	//tx
 	return b
 }
 
@@ -31,46 +34,54 @@ func (b *Block) PrintBlock() {
 	fmt.Println("Transactions:  \n", b.transactions)
 }
 
-//Blockchain Struct: what a blockchain contains
-type Blockchain struct{
-  transactionPool []string
-  chain []*Block
+func (b *Block) Hash() [32]byte{
+	m, _ := json.Marshal(b)
+	return sha256.Sum256([]byte(m))
 }
 
-func NewBlockchain() *Blockchain{
-  bc:= new(Blockchain)
-  bc.CreateBlock(0, "Init Hash")
-  return bc
+// Blockchain Struct: what a blockchain contains
+type Blockchain struct {
+	transactionPool []string
+	chain           []*Block
 }
 
-func (bc *Blockchain) CreateBlock(nonce int, previousHash string) *Block{
-  b := NewBlock(nonce, previousHash)
-  bc.chain = append(bc.chain,b)
-  return b
+func NewBlockchain() *Blockchain {
+	bc := new(Blockchain)
+	bc.CreateBlock(0, "Init Hash") //we are initializing very first(or 0th) block here. Rest of the blocks will be added after this.
+	fmt.Println(bc)
+	return bc
 }
 
+// '(bc *Blockchain)' means this function is defined as a method of the 'Blockchain' struct. '(bc *Blockchain)' is called the reciever of the function 'CreateBlock'. --> Go specific type
+func (bc *Blockchain) CreateBlock(nonce int, previousHash string) *Block {
+	b := NewBlock(nonce, previousHash)
+	// fmt.Println(bc.chain)
+	bc.chain = append(bc.chain, b)
+	// fmt.Println(bc.chain)
+
+	return b
+}
 
 func init() {
 	log.SetPrefix("Blockchain: ")
 }
 
-//EASE OF VIEW: 
-func (bc *Blockchain) PrintBlockchain(){
-  for i, block := range bc.chain{
-    fmt.Printf("%s Chain id: %d %s\n", strings.Repeat("=", 25), i, strings.Repeat("=", 25))
-    block.PrintBlock()
-  }
-  //at the end of the log
-  fmt.Printf("%s\n",strings.Repeat("*",70))
+// EASE OF VIEW:
+func (bc *Blockchain) PrintBlockchain() {
+	for i, block := range bc.chain {
+		fmt.Printf("%s Chain id: %d %s\n", strings.Repeat("=", 25), i, strings.Repeat("=", 25))
+		block.PrintBlock()
+	}
+	//at the end of the log
+	fmt.Printf("%s\n", strings.Repeat("*", 70))
 }
-func main() {
-	// b := NewBlock(123, "123abc")
-	// b.Print()
 
-  blockchain := NewBlockchain()
-  // blockchain.Print()
-  blockchain.CreateBlock(5, "hash 1")
-  // blockchain.Print()
-  blockchain.CreateBlock(2, "hash 2")
-  blockchain.PrintBlockchain()
+func main() {
+	// blockchain := NewBlockchain()
+	// blockchain.CreateBlock(1, "hash 1")
+	// blockchain.CreateBlock(2, "hash 2")
+	// blockchain.CreateBlock(3, "hash 3")
+	// blockchain.PrintBlockchain()
+	//   NewBlockchain().CreateBlock(12,"abc")
 }
+
